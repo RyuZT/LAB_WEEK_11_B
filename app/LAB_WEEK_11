@@ -1,0 +1,33 @@
+1. private fun insertToStore(
+       fileInfo: FileInfo.FileInfo,
+       contentUri: Uri,
+       contentValues: ContentValues
+   ) {
+       executor.execute {
+           val insertedUri = contentResolver.insert(contentUri, contentValues)
+           insertedUri?.let { uri ->
+               val inputStream = contentResolver.openInputStream(fileInfo.uri)
+               val outputStream = contentResolver.openOutputStream(uri)
+               IOUtils.copy(inputStream, outputStream)
+           }
+       }
+   }
+
+2. FileInfo.FileInfo(
+       uri,          // 1
+       file,         // 2
+       name,         // 3
+       relativePath, // 4
+       mimeType      // 5
+   )
+URI adalah lokasi file SEMENTARA yang dibuat di internal/external app storage
+URI ini digunakan oleh kamera saat menyimpan foto sebelum dipindahkan ke MediaStore.
+elativePath adalah folder tujuan di dalam MediaStore
+(di Android 10+ menggunakan konsep scoped storage)
+
+3. - User menekan tombol foto
+   - Kamera Android menyimpan hasil foto ke URI yang diberikan
+   - Setelah foto selesai, callback ActivityResult Contracts dipanggil
+   - ProviderFileManager.create ContentValues dan insert ke MediaStore
+   - Aplikasi menyalin isi file sementara → ke file di MediaStore
+   - File sekarang tersimpan permanen di Galeri pengguna
